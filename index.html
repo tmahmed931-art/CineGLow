@@ -717,7 +717,7 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance
   <main id="view"></main>
 
   <div class="mini" id="mini">
-    <iframe id="mini-iframe" allow="autoplay"></iframe>
+    <iframe id="mini-iframe" allow="autoplay; fullscreen; encrypted-media" allowfullscreen webkitallowfullscreen mozallowfullscreen></iframe>
     <div class="mini-controls">
       <button class="mini-btn" onclick="expandMini()" title="Expand">⬆️</button>
       <button class="mini-btn" onclick="closeMini()" title="Close">✕</button>
@@ -1031,7 +1031,13 @@ function addSearchHistory(q) {
 }
 
 /* === ROUTER === */
-function navigate(p) { location.hash = p; window.scrollTo({ top: 0, behavior: 'smooth' }); }
+function navigate(p) {
+  const f = document.getElementById('player-iframe');
+  if (f) f.src = '';
+  closeMini();
+  location.hash = p;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 function parseRoute() {
   const h = location.hash.replace(/^#/, '') || '/';
   const [p, q] = h.split('?'); const parts = p.split('/').filter(Boolean);
@@ -1146,7 +1152,8 @@ function openMini(item, url) {
 }
 function closeMini() {
   document.getElementById('mini').classList.remove('visible');
-  document.getElementById('mini-iframe').src = '';
+  const iframe = document.getElementById('mini-iframe');
+  if (iframe) iframe.src = 'about:blank';
   miniItem = null;
 }
 function expandMini() {
@@ -3042,7 +3049,7 @@ async function renderDetail(view, mt, id) {
         </div>
         ${mt === 'tv' ? `<div style="display:flex;gap:9px;margin-bottom:12px;flex-wrap:wrap"><select class="f-select" id="season-sel" onchange="onSeason('${mt}',${id})">${(det.seasons || []).filter(s => s.season_number > 0).map(s => `<option value="${s.season_number}">S${s.season_number} (${s.episode_count} eps)</option>`).join('')}</select><select class="f-select" id="ep-sel"></select></div>` : ''}
         <div class="player-wrap">
-          <iframe id="player-iframe" src="" allow="autoplay;fullscreen;encrypted-media" allowfullscreen></iframe>
+          <iframe id="player-iframe" src="" allow="autoplay; fullscreen; encrypted-media" allowfullscreen webkitallowfullscreen mozallowfullscreen></iframe>
           <div class="fx-hud">
             <div class="fx-title">🎛️ Video FX</div>
             <div class="fx-row"><span>Brightness</span><span class="fx-val" id="v-b">100%</span></div>
