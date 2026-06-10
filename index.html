@@ -657,6 +657,57 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance
 .ctx-item:hover { background: var(--surface-2); color: var(--text); }
 .ctx-div { height: 1px; background: var(--border); margin: 4px 0; }
 
+/* === 3D ROTATING CAROUSEL === */
+.scene, .a3d { display: grid }
+
+.scene {
+  overflow: hidden;
+  perspective: 35em;
+  mask: linear-gradient(90deg, #0000, red 20% 80%, #0000);
+  margin: 32px 0;
+  height: 420px;
+  position: relative;
+}
+
+.a3d {
+  place-self: center;
+  transform-style: preserve-3d;
+  animation: ry 32s linear infinite;
+  cursor: pointer;
+}
+
+@keyframes ry { to { rotate: y 1turn } }
+
+.card-3d {
+  --w: 17.5em;
+  --ba: 1turn/var(--n);
+  grid-area: 1/ 1;
+  width: var(--w);
+  aspect-ratio: 7/ 10;
+  object-fit: cover;
+  border-radius: 1.2em;
+  backface-visibility: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.1);
+  transition: box-shadow 0.3s;
+  transform: 
+    rotatey(calc(var(--i)*var(--ba)))
+    translatez(calc(-1*(.5*var(--w) + .5em)/tan(.5*var(--ba))));
+}
+
+.card-3d:hover {
+  box-shadow: 0 12px 48px rgba(0,240,255,0.4), 0 0 0 2px var(--accent);
+  filter: brightness(1.1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .a3d { animation-duration: 128s }
+}
+
+@media (max-width: 768px) {
+  .scene { height: 320px; }
+  .card-3d { --w: 12em; }
+}
+
 /* === MISC === */
 .confetti { position: fixed; width: 7px; height: 11px; z-index: 300; pointer-events: none; animation: confetti-fall 2s ease-out forwards; }
 @keyframes confetti-fall { 0% { transform: translateY(-20px) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
@@ -1738,17 +1789,29 @@ async function renderHome(view) {
   `;
   if (history.length > 0) {
     html += `<section class="section"><div class="section-header"><h2 class="section-title">▶️ Continue Watching</h2><span class="section-sub">${history.length} items</span></div><div class="cards-row">${history.slice(0, 12).map((h, i) => {
-      const prog = 30 + Math.floor(Math.random() * 60);
+      const dateStr = h.ts ? new Date(h.ts).toLocaleDateString() : '';
       return `<div style="flex:0 0 220px;animation:fadeUp .4s ${i * 30}ms both">
         <div class="poster" style="aspect-ratio:16/9" onclick="navigate('/${h.media_type}/${h.id}')" oncontextmenu="showCtx(event, ${JSON.stringify(h).replace(/"/g, '&quot;')})">
           <img loading="lazy" decoding="async" src="${posterUrl(h.poster_path)}" alt="${esc(titleOf(h))}" style="aspect-ratio:16/9;object-fit:cover" />
-          <div class="poster-progress" style="width:${prog}%"></div>
         </div>
         <div style="font-size:12px;font-weight:700;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(titleOf(h))}</div>
-        <div style="font-size:10.5px;color:var(--text-dim)">${prog}% watched</div>
+        <div style="font-size:10.5px;color:var(--text-dim)">${dateStr}</div>
       </div>`;
     }).join('')}</div></section>`;
   }
+
+  // 3D Carousel placeholder — loaded dynamically with personalized recommendations
+  html += `
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title" id="carousel-title">🎯 Picked for You</h2>
+        <button class="btn btn-ghost btn-sm" onclick="refreshCarousel()">🔄 Shuffle</button>
+      </div>
+      <div id="carousel-host">
+        <div class="scene"><div class="skel" style="width:240px;height:340px;border-radius:1.2em;place-self:center"></div></div>
+      </div>
+    </section>
+  `;
   html += renderTicker(trending.results.slice(0, 16));
   html += section('🔥 Trending Today', trending.results.slice(1, 16), 'r-trend');
   html += `<section class="section"><div class="section-header"><h2 class="section-title">🎭 Browse by Mood</h2><button class="btn btn-ghost btn-sm" onclick="navigate('/mood')">All moods →</button></div><div class="mood-grid">${MOODS.slice(0, 6).map(m => `<div class="mood-card" style="--mood-color:${m.color};--mood-bg:linear-gradient(135deg, ${m.color}, ${m.color2})" onclick="navigate('/discover?${m.query}')"><div class="mood-icon">${m.icon}</div><div><div class="mood-name">${m.name}</div><div class="mood-desc">${m.desc}</div></div></div>`).join('')}</div></section>`;
@@ -1766,6 +1829,107 @@ async function renderHome(view) {
       view.insertAdjacentHTML('beforeend', section('📺 Airing Today', airing.results.slice(0, 16), 'r-air'));
     } catch {}
   }, { timeout: 2000 });
+
+  // Load personalized 3D carousel
+  loadPersonalizedCarousel();
+}
+
+// === PERSONALIZED 3D CAROUSEL ===
+async function loadPersonalizedCarousel() {
+  const host = document.getElementById('carousel-host');
+  const titleEl = document.getElementById('carousel-title');
+  if (!host) return;
+  
+  try {
+    const history = getHistory();
+    const ratings = getRatings();
+    const watchlist = getWatchlist();
+    
+    let recommendations = [];
+    let sourceLabel = '';
+    
+    // Build seed pool from user activity (last 10 watched + highly rated + watchlist)
+    const seedPool = [];
+    history.slice(0, 10).forEach(h => seedPool.push({ id: h.id, type: h.media_type, weight: 3 }));
+    Object.entries(ratings).forEach(([k, v]) => {
+      if (v.r >= 4) {
+        const [type, id] = k.split('_');
+        seedPool.push({ id: parseInt(id), type, weight: v.r });
+      }
+    });
+    watchlist.slice(0, 5).forEach(w => seedPool.push({ id: w.id, type: w.media_type, weight: 2 }));
+    
+    if (seedPool.length > 0) {
+      // Pick 3 random seeds (weighted) and fetch their recommendations
+      const shuffled = seedPool.sort(() => Math.random() - 0.5).slice(0, 3);
+      const recPromises = shuffled.map(s => 
+        tmdb(`/${s.type}/${s.id}/recommendations`).catch(() => ({ results: [] }))
+      );
+      const recResults = await Promise.all(recPromises);
+      const allRecs = recResults.flatMap(r => r.results || []);
+      
+      // Deduplicate + filter
+      const seen = new Set();
+      const historyIds = new Set(history.map(h => h.media_type + '_' + h.id));
+      recommendations = allRecs.filter(r => {
+        const key = (r.media_type || (r.title ? 'movie' : 'tv')) + '_' + r.id;
+        if (seen.has(key) || historyIds.has(key) || !r.poster_path) return false;
+        seen.add(key);
+        return true;
+      });
+      
+      sourceLabel = `Based on your taste · ${history.length} watched`;
+    }
+    
+    // Fallback to trending if no personalized recs
+    if (recommendations.length < 8) {
+      const trending = await tmdb('/trending/all/week', { page: Math.floor(Math.random() * 3) + 1 });
+      const trendingFiltered = (trending.results || []).filter(r => r.poster_path && r.media_type !== 'person');
+      // Mix recommendations + trending
+      recommendations = [...recommendations, ...trendingFiltered];
+      if (!sourceLabel) sourceLabel = 'Trending picks · Updated now';
+    }
+    
+    // Shuffle for variety on each page visit
+    recommendations.sort(() => Math.random() - 0.5);
+    const carouselMovies = recommendations.slice(0, 12);
+    
+    if (carouselMovies.length === 0) {
+      host.innerHTML = '';
+      return;
+    }
+    
+    if (titleEl) {
+      titleEl.textContent = history.length > 0 || Object.keys(ratings).length > 0 
+        ? '🎯 Picked for You' 
+        : '🔥 Trending Now';
+    }
+    
+    host.innerHTML = `
+      <div style="font-size:11px;color:var(--text-muted);text-align:center;margin-bottom:14px;letter-spacing:.05em">${sourceLabel}</div>
+      <div class="scene">
+        <div class="a3d" style="--n: ${carouselMovies.length}">
+          ${carouselMovies.map((m, i) => `
+            <img class="card-3d" 
+                 style="--i: ${i}" 
+                 src="${posterUrl(m.poster_path, 'w500')}" 
+                 alt="${esc(titleOf(m))}"
+                 onclick="navigate('/${typeOf(m)}/${m.id}')"
+                 loading="lazy" />
+          `).join('')}
+        </div>
+      </div>
+    `;
+  } catch (e) {
+    host.innerHTML = '';
+  }
+}
+
+function refreshCarousel() {
+  const host = document.getElementById('carousel-host');
+  if (host) host.innerHTML = '<div class="scene"><div class="skel" style="width:240px;height:340px;border-radius:1.2em;place-self:center"></div></div>';
+  loadPersonalizedCarousel();
+  toast('Carousel refreshed', '🔄');
 }
 
 function renderTicker(items) {
