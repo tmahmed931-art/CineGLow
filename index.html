@@ -377,8 +377,11 @@ a:hover { text-decoration: underline; }
 }
 .player-wrap.css-fullscreen .fs-exit-btn { display: flex; }
 .fs-exit-btn:hover { background: var(--accent); color: #000; border-color: var(--accent); }
-.fx-hud { position: absolute; top: 14px; left: 14px; background: rgba(6,7,13,0.9); backdrop-filter: blur(20px); border: 1px solid var(--border-strong); border-radius: 14px; padding: 14px; width: 240px; z-index: 10; opacity: 0; transition: opacity .25s; }
-.player-wrap:hover .fx-hud { opacity: 1; }
+.fx-hud { position: absolute; top: 14px; left: 14px; background: rgba(6,7,13,0.9); backdrop-filter: blur(20px); border: 1px solid var(--border-strong); border-radius: 14px; padding: 14px; width: 240px; z-index: 10; opacity: 0; pointer-events: none; transition: opacity .25s; }
+.fx-hud.open { opacity: 1; pointer-events: auto; }
+@media (min-width: 769px) { .player-wrap:hover .fx-hud { opacity: 1; pointer-events: auto; } .fx-toggle-btn { display: none; } }
+.fx-toggle-btn { position: absolute; top: 12px; left: 12px; z-index: 9; width: 36px; height: 36px; border-radius: 10px; background: rgba(0,0,0,0.7); border: 1px solid rgba(255,255,255,0.15); color: #fff; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s; }
+.fx-toggle-btn:hover { background: var(--accent); color: #000; }
 .fx-title { font-family: var(--font-display); font-size: 10px; font-weight: 800; background: var(--brand-grad); -webkit-background-clip: text; background-clip: text; color: transparent; margin-bottom: 10px; letter-spacing: 0.15em; text-transform: uppercase; }
 .fx-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 7px; font-size: 11.5px; }
 .fx-row > span { color: var(--text-dim); }
@@ -672,6 +675,59 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance
 .footer { margin: 40px clamp(12px, 2.4vw, 36px) 24px; padding-top: 24px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
 .footer-text { font-size: 11px; color: var(--text-muted); }
 
+/* === MOBILE NAVIGATION === */
+.mobile-bottom-nav,
+.mobile-menu-backdrop,
+.mobile-menu-panel { display: none; }
+.mobile-bottom-nav {
+  position: fixed; left: 10px; right: 10px; bottom: 10px; z-index: 90;
+  height: 64px; padding: 6px;
+  background: color-mix(in srgb, var(--bg-2) 88%, transparent);
+  border: 1px solid var(--border-strong); border-radius: 18px;
+  backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.45);
+  grid-template-columns: repeat(5, 1fr); gap: 4px;
+}
+.mobile-nav-btn {
+  border: none; background: transparent; color: var(--text-dim); border-radius: 13px;
+  font-family: inherit; font-size: 10px; font-weight: 700;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  cursor: pointer; transition: color .15s, background .15s, transform .15s;
+}
+.mobile-nav-btn span { font-size: 18px; line-height: 1; }
+.mobile-nav-btn:active { transform: scale(.96); }
+.mobile-nav-btn.active { color: var(--accent); background: var(--accent-glow); }
+.mobile-menu-backdrop {
+  position: fixed; inset: 0; z-index: 95; background: rgba(0,0,0,0.68);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+}
+.mobile-menu-backdrop.open { display: block; }
+.mobile-menu-panel {
+  position: fixed; left: 10px; right: 10px; bottom: 84px; z-index: 100;
+  max-height: 72vh; overflow-y: auto; padding: 14px;
+  background: var(--bg-2); border: 1px solid var(--border-strong); border-radius: 20px;
+  box-shadow: 0 24px 70px rgba(0,0,0,0.6);
+  animation: mobilePanelIn .22s ease;
+}
+.mobile-menu-panel.open { display: block; }
+@keyframes mobilePanelIn { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.mobile-menu-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.mobile-menu-title { font-family: var(--font-display); font-weight: 800; font-size: 18px; background: var(--brand-grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.mobile-close { width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; }
+.mobile-search { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); margin-bottom: 12px; }
+.mobile-search input { flex: 1; min-width: 0; background: transparent; border: none; outline: none; color: var(--text); font-family: inherit; font-size: 14px; }
+.mobile-menu-section { margin-top: 12px; }
+.mobile-section-label { font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: .12em; margin: 0 0 8px 4px; }
+.mobile-link-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.mobile-link {
+  display: flex; align-items: center; gap: 9px; padding: 11px 12px; border-radius: 12px;
+  background: var(--surface); border: 1px solid var(--border); color: var(--text-dim);
+  font-family: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; text-align: left;
+}
+.mobile-link:active { transform: scale(.98); }
+.mobile-link:hover { color: var(--accent); border-color: var(--accent); }
+.mobile-link.full { grid-column: 1 / -1; justify-content: center; }
+
 .stars { display: inline-flex; gap: 2px; }
 .stars .s { color: var(--text-muted); transition: color .15s, transform .15s; cursor: pointer; }
 .stars .s.filled { color: #facc15; }
@@ -684,15 +740,34 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance
 
 /* === RESPONSIVE === */
 @media (max-width: 768px) {
+  body { padding-bottom: 86px; }
+  .navbar { height: 58px; padding: 0 12px; gap: 8px; }
+  .logo-text { font-size: 17px; }
+  .logo-icon { width: 28px; height: 28px; }
   .nav-links { display: none; }
-  .nav-search { max-width: 130px; }
+  .nav-search { display: none; }
   .nav-search .kbd { display: none; }
+  .nav-actions > .icon-btn { display: none; }
+  .nav-actions .dropdown .icon-btn { display: flex; }
+  .dropdown-menu { right: 0; max-width: calc(100vw - 24px); }
+  .mobile-bottom-nav { display: grid; }
   .hero-content, .detail-content { padding: 20px; gap: 16px; flex-direction: column; align-items: flex-start; }
+  .hero { min-height: 72vh; margin: 10px; border-radius: 18px; }
+  .hero-title { font-size: clamp(2rem, 13vw, 3.3rem); }
+  .detail-hero { margin: 10px; border-radius: 18px; }
   .detail-poster { flex: 0 0 130px; width: 130px; }
   .cards-row > * { flex: 0 0 130px; }
   .cards-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 11px; }
   .mini { width: 260px; height: 146px; bottom: 12px; right: 12px; }
   .heatmap { grid-template-columns: repeat(26, 1fr); }
+  .compare-row { grid-template-columns: 1fr !important; }
+  .tab-nav { margin-left: 10px; margin-right: 10px; }
+  .filter-bar { padding: 12px; }
+  .filter-row { gap: 7px; }
+  .f-select, .f-input { min-width: 0; }
+  .friend-card-main { grid-template-columns: 1fr; }
+  .friend-photo-container, .friend-photo-placeholder { min-height: 320px; }
+  .friend-content { padding: 22px; }
 }
 </style>
 </head>
@@ -777,13 +852,10 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance
   <button class="d-item" onclick="navigate('/boxoffice')">💰 Box Office</button>
   <button class="d-item" onclick="navigate('/awards')">🏆 Awards</button>
   <button class="d-item" onclick="navigate('/random')">🎲 Randomizer</button>
-  <button class="d-item" onclick="navigate('/compare')">⚖️ Compare</button>
-  <button class="d-item" onclick="navigate('/quiz')">🎯 Quiz</button>
   <button class="d-item" onclick="navigate('/favorites')">❤️ Favorites</button>
   <button class="d-item" onclick="navigate('/resume')">▶️ Resume</button>
   <button class="d-item" onclick="navigate('/leaderboard')">🏆 Leaderboard</button>
   <button class="d-item" onclick="navigate('/ratings-board')">⭐ Ratings Board</button>
-  <button class="d-item" onclick="navigate('/similar-pairs')">🔗 Twin Titles</button>
   <button class="d-item" onclick="navigate('/friends')">🫂 Friends</button>
           <div class="d-divider"></div>
           <div class="d-row">
@@ -796,6 +868,67 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance
       </div>
     </div>
   </nav>
+
+  <!-- Mobile bottom navigation + full menu -->
+  <div class="mobile-menu-backdrop" id="mobile-menu-backdrop" onclick="closeMobileMenu()"></div>
+  <div class="mobile-menu-panel" id="mobile-menu-panel">
+    <div class="mobile-menu-head">
+      <div>
+        <div class="mobile-menu-title">CineGlow Menu</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px">كل الصفحات والقوايم هنا</div>
+      </div>
+      <button class="mobile-close" onclick="closeMobileMenu()">✕</button>
+    </div>
+    <div class="mobile-search">
+      <span>🔍</span>
+      <input id="mobile-search-input" placeholder="Search movies & shows..." onkeydown="if(event.key==='Enter')runMobileSearch()" />
+      <button class="btn btn-primary btn-sm" onclick="runMobileSearch()">Go</button>
+    </div>
+    <div class="mobile-menu-section">
+      <div class="mobile-section-label">Main</div>
+      <div class="mobile-link-grid">
+        <button class="mobile-link" onclick="navigate('/')">🏠 Home</button>
+        <button class="mobile-link" onclick="navigate('/discover')">🔎 Discover</button>
+        <button class="mobile-link" onclick="navigate('/providers')">📡 Providers</button>
+        <button class="mobile-link" onclick="navigate('/calendar')">📅 Calendar</button>
+        <button class="mobile-link" onclick="navigate('/collections')">📁 Collections</button>
+        <button class="mobile-link" onclick="navigate('/history')">🕒 History</button>
+        <button class="mobile-link" onclick="navigate('/friends')">🫂 Friends</button>
+        <button class="mobile-link" onclick="navigate('/dashboard')">📊 Dashboard</button>
+      </div>
+    </div>
+    <div class="mobile-menu-section">
+      <div class="mobile-section-label">Explore</div>
+      <div class="mobile-link-grid">
+        <button class="mobile-link" onclick="navigate('/mood')">🎭 Mood</button>
+        <button class="mobile-link" onclick="navigate('/new')">🆕 New</button>
+        <button class="mobile-link" onclick="navigate('/top')">👑 Top</button>
+        <button class="mobile-link" onclick="navigate('/boxoffice')">💰 Box Office</button>
+        <button class="mobile-link" onclick="navigate('/awards')">🏆 Awards</button>
+        <button class="mobile-link" onclick="navigate('/random')">🎲 Random</button>
+        <button class="mobile-link" onclick="navigate('/favorites')">❤️ Favorites</button>
+        <button class="mobile-link" onclick="navigate('/ratings-board')">⭐ Ratings</button>
+        <button class="mobile-link" onclick="closeMobileMenu();openFeatures()">✨ Features</button>
+      </div>
+    </div>
+    <div class="mobile-menu-section">
+      <div class="mobile-section-label">Tools</div>
+      <div class="mobile-link-grid">
+        <button class="mobile-link" onclick="closeMobileMenu();surpriseMe()">🎲 Surprise Me</button>
+        <button class="mobile-link" onclick="closeMobileMenu();openSleepTimer()">⏰ Sleep Timer</button>
+        <button class="mobile-link" onclick="closeMobileMenu();openAmbient()">🎧 Ambient</button>
+        <button class="mobile-link" onclick="closeMobileMenu();openShortcuts()">⌨️ Shortcuts</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="mobile-bottom-nav" id="mobile-bottom-nav">
+    <button class="mobile-nav-btn" data-mobile-route="/" onclick="navigate('/')"><span>🏠</span>Home</button>
+    <button class="mobile-nav-btn" data-mobile-route="/discover" onclick="navigate('/discover')"><span>🔎</span>Discover</button>
+    <button class="mobile-nav-btn" data-mobile-route="/providers" onclick="navigate('/providers')"><span>📡</span>Providers</button>
+    <button class="mobile-nav-btn" data-mobile-route="/calendar" onclick="navigate('/calendar')"><span>📅</span>Calendar</button>
+    <button class="mobile-nav-btn" onclick="openMobileMenu()"><span>☰</span>More</button>
+  </div>
 
   <main id="view"></main>
 
@@ -1096,6 +1229,9 @@ function toggleWatchlist(item) {
 function inWatchlist(id, t) { return getWatchlist().some(x => x.id === id && x.media_type === t); }
 function addHistory(item) {
   const h = LS.get('history', []);
+  // Remove existing entry for same title so it only appears once
+  const idx = h.findIndex(x => x.id === item.id && x.media_type === item.media_type);
+  if (idx >= 0) h.splice(idx, 1);
   h.unshift({ ...item, ts: Date.now() });
   LS.set('history', h.slice(0, 500));
   if (h.length === 1) unlock('first_watch');
@@ -1120,8 +1256,14 @@ function getContinueWatching() { return LS.get('continue', []).slice(0, 8); }
 function addContinue(item) {
   const cw = LS.get('continue', []);
   const idx = cw.findIndex(x => x.id === item.id && x.media_type === item.media_type);
-  if (idx >= 0) cw.splice(idx, 1);
-  cw.unshift({ ...item, progress: Math.min(100, (item.progress || 0) + 25), ts: Date.now() });
+  if (idx >= 0) {
+    // Update existing entry in place — don't duplicate
+    cw[idx].ts = Date.now();
+    cw[idx].progress = Math.min(100, (cw[idx].progress || 0) + 5);
+  } else {
+    // New entry
+    cw.unshift({ ...item, progress: 15, ts: Date.now() });
+  }
   LS.set('continue', cw.slice(0, 20));
 }
 function addUserReview(id, mt, rev) {
@@ -1142,7 +1284,11 @@ function addSearchHistory(q) {
 }
 
 /* === ROUTER === */
-function navigate(p) { location.hash = p; window.scrollTo({ top: 0, behavior: 'smooth' }); }
+function navigate(p) {
+  closeMobileMenu();
+  location.hash = p;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 function parseRoute() {
   const h = location.hash.replace(/^#/, '') || '/';
   const [p, q] = h.split('?'); const parts = p.split('/').filter(Boolean);
@@ -1156,6 +1302,26 @@ function updateNav() {
     b.classList.toggle('active', r === path || (path.startsWith(r) && r !== '/' && path.length > 1));
     if (r === '/' && path === '/') b.classList.add('active');
   });
+  document.querySelectorAll('.mobile-nav-btn[data-mobile-route]').forEach(b => {
+    const r = b.dataset.mobileRoute;
+    b.classList.toggle('active', r === path || (path.startsWith(r) && r !== '/' && path.length > 1));
+    if (r === '/' && path === '/') b.classList.add('active');
+  });
+}
+
+function openMobileMenu() {
+  document.getElementById('mobile-menu-backdrop')?.classList.add('open');
+  document.getElementById('mobile-menu-panel')?.classList.add('open');
+}
+function closeMobileMenu() {
+  document.getElementById('mobile-menu-backdrop')?.classList.remove('open');
+  document.getElementById('mobile-menu-panel')?.classList.remove('open');
+}
+function runMobileSearch() {
+  const q = document.getElementById('mobile-search-input')?.value.trim();
+  if (!q) return;
+  addSearchHistory(q);
+  navigate('/discover?q=' + encodeURIComponent(q));
 }
 
 /* === RENDER === */
@@ -1183,13 +1349,10 @@ async function render() {
     else if (path === '/top') await renderAllTimeTop(view);
     else if (path === '/genres-full') await renderGenresFull(view);
     else if (path === '/random') await renderRandomizer(view);
-    else if (path === '/compare') await renderCompare(view);
     else if (path === '/boxoffice') await renderBoxOffice(view);
     else if (path === '/awards') await renderAwards(view);
     else if (path === '/favorites') renderFavorites(view);
     else if (path === '/resume') renderResume(view);
-    else if (path === '/similar-pairs') await renderSimilarPairs(view);
-    else if (path === '/quiz') await renderQuiz(view);
     else if (path === '/leaderboard') renderLeaderboard(view);
     else if (path === '/ratings-board') renderRatingsBoard(view);
     else if (path === '/discover') await renderDiscover(view, query);
@@ -1421,7 +1584,7 @@ function applyImp(d) {
 
 /* === FEATURES HUB === */
 function openFeatures() {
-  document.getElementById('modal-root').innerHTML = `<div class="modal-back" onclick="if(event.target===this)closeModal()"><div class="modal" style="max-width:680px"><div class="modal-head"><h2 class="modal-title">✨ 48+ Features</h2><button class="modal-close" onclick="closeModal()">✕</button></div><p style="color:var(--text-dim);margin-bottom:16px;font-size:12.5px">Every feature in this single-file app.</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11.5px">${['🎨 6 Themes','🎬 SVG Logo','💫 Particle BG','📜 Quote Banner','🎭 12 Moods','📼 7 Decades','🎲 Surprise Me','📺 Mini Player','▶️ Continue Watching','⭐ 5★ Ratings','📝 User Reviews','⏰ Sleep Timer','🎧 Ambient Sounds','📝 Subtitle Upload','📊 Activity Heatmap','📅 Personal Calendar','🎨 Share Card','📁 Multi-Collection','🖱️ Context Menu','💾 Export/Import','🔍 Search History','🌗 Auto Theme','⌨️ 12 Shortcuts','🖥️ Fullscreen','🏆 15 Achievements','🔗 Shareable URLs','📋 Search Presets','💤 Confetti FX','🎞️ Film Sprocket','🔔 Browser Notifications','🌍 6 Accent Colors','📡 40+ Providers','🏢 100+ Networks','🎞️ 100+ Studios','🆕 What\'s New Page','👑 All-Time Top','💰 Box Office','🏆 Awards Page','🎲 Randomizer','⚖️ Compare Tool','🎯 Movie Quiz','❤️ Favorites Page','▶️ Resume Page','🕒 Full History (Delete/Edit/Mark Complete)','🏆 Leaderboard','⭐ Ratings Board','🔗 Twin Titles','🌍 22 Regions','🖼️ Real Provider Logos'].map(f => `<div style="padding:7px 9px;background:var(--surface);border:1px solid var(--border);border-radius:6px">${f}</div>`).join('')}</div></div></div>`;
+  document.getElementById('modal-root').innerHTML = `<div class="modal-back" onclick="if(event.target===this)closeModal()"><div class="modal" style="max-width:680px"><div class="modal-head"><h2 class="modal-title">✨ 45+ Features</h2><button class="modal-close" onclick="closeModal()">✕</button></div><p style="color:var(--text-dim);margin-bottom:16px;font-size:12.5px">Every feature in this single-file app.</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11.5px">${['🎨 6 Themes','🎬 SVG Logo','💫 Particle BG','📜 Quote Banner','🎭 12 Moods','📼 7 Decades','🎲 Surprise Me','📺 Mini Player','▶️ Continue Watching','⭐ 5★ Ratings','📝 User Reviews','⏰ Sleep Timer','🎧 Ambient Sounds','📝 Subtitle Upload','📊 Activity Heatmap','📅 Personal Calendar','🎨 Share Card','📁 Multi-Collection','🖱️ Context Menu','💾 Export/Import','🔍 Search History','🌗 Auto Theme','⌨️ 12 Shortcuts','🖥️ Fullscreen','🏆 15 Achievements','🔗 Shareable URLs','📋 Search Presets','💤 Confetti FX','🎞️ Film Sprocket','🔔 Browser Notifications','🌍 6 Accent Colors','📡 40+ Providers','🏢 100+ Networks','🎞️ 100+ Studios','🆕 What\'s New Page','👑 All-Time Top','💰 Box Office','🏆 Awards Page','🎲 Randomizer','❤️ Favorites Page','▶️ Resume Page','🕒 Full History','🏆 Leaderboard','⭐ Ratings Board','🌍 22 Regions','🖼️ Real Provider Logos'].map(f => `<div style="padding:7px 9px;background:var(--surface);border:1px solid var(--border);border-radius:6px">${f}</div>`).join('')}</div></div></div>`;
 }
 
 /* === SHARE CARD === */
@@ -2183,58 +2346,27 @@ async function runRandomizer() {
   } catch (e) { toast('Failed', '❌'); }
 }
 
-// 5. COMPARE
-async function renderCompare(view) {
-  view.innerHTML = `<div style="margin:24px clamp(12px,2.4vw,36px) 0"><h1 class="display" style="font-size:clamp(1.9rem,3.5vw,2.6rem);margin-bottom:5px">⚖️ Compare</h1><p style="color:var(--text-dim);font-size:13px">Side-by-side comparison of any two titles.</p></div>
-  <div style="margin:0 clamp(12px,2.4vw,36px) 36px">
-    <div class="filter-bar">
-      <div class="filter-row">
-        <div style="flex:1"><label style="font-size:10px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:5px">Title 1</label><input class="f-input" id="cmp1" placeholder="Search first title..." /></div>
-        <div style="flex:1"><label style="font-size:10px;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:5px">Title 2</label><input class="f-input" id="cmp2" placeholder="Search second title..." /></div>
-        <button class="btn btn-primary" style="align-self:flex-end" onclick="runCompare()">⚖️ Compare</button>
-      </div>
-    </div>
-    <div id="cmp-out" style="margin-top:24px"></div>
-  </div>`;
-}
-async function runCompare() {
-  unlock('comparer');
-  const q1 = document.getElementById('cmp1').value.trim();
-  const q2 = document.getElementById('cmp2').value.trim();
-  if (!q1 || !q2) { toast('Enter both titles', '⚠️'); return; }
-  try {
-    const [r1, r2] = await Promise.all([tmdb('/search/multi', { query: q1 }), tmdb('/search/multi', { query: q2 })]);
-    const m1 = (r1.results || []).find(r => (r.media_type === 'movie' || r.media_type === 'tv') && r.poster_path);
-    const m2 = (r2.results || []).find(r => (r.media_type === 'movie' || r.media_type === 'tv') && r.poster_path);
-    if (!m1 || !m2) { toast('Could not find both titles', '❌'); return; }
-    const [d1, d2] = await Promise.all([tmdb(`/${m1.media_type}/${m1.id}`), tmdb(`/${m2.media_type}/${m2.id}`)]);
-    document.getElementById('cmp-out').innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">${compareCard(d1, m1.media_type)}${compareCard(d2, m2.media_type)}</div>`;
-  } catch (e) { toast('Failed', '❌'); }
-}
-function compareCard(d, mt) {
-  return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px">
-    <div style="display:flex;gap:14px;margin-bottom:14px">
-      <img src="${posterUrl(d.poster_path, 'w185')}" style="width:100px;border-radius:10px;display:block" />
-      <div style="flex:1"><h3 style="font-family:var(--font-display);font-weight:800;font-size:1.1rem;line-height:1.2">${esc(d.title || d.name)}</h3><div style="font-size:11px;color:var(--text-muted);margin-top:3px">${mt === 'tv' ? '📺 TV' : '🎬 Movie'} · ${(d.release_date || d.first_air_date || '').slice(0,4) || '—'}</div><div style="margin-top:8px"><button class="btn btn-primary btn-sm" onclick="navigate('/${mt}/${d.id}')">View →</button></div></div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11.5px">
-      <div><span style="color:var(--text-muted)">Rating:</span> <strong>${(d.vote_average || 0).toFixed(1)}/10</strong></div>
-      <div><span style="color:var(--text-muted)">Votes:</span> <strong>${(d.vote_count || 0).toLocaleString()}</strong></div>
-      <div><span style="color:var(--text-muted)">Popularity:</span> <strong>${Math.round(d.popularity || 0)}</strong></div>
-      <div><span style="color:var(--text-muted)">Status:</span> <strong>${esc(d.status || '—')}</strong></div>
-      <div><span style="color:var(--text-muted)">Runtime:</span> <strong>${d.runtime ? d.runtime + 'm' : '—'}</strong></div>
-      <div><span style="color:var(--text-muted)">Lang:</span> <strong>${d.original_language?.toUpperCase() || '—'}</strong></div>
-    </div>
-    <div style="margin-top:12px;font-size:11.5px;color:var(--text-dim);line-height:1.5;max-height:90px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical">${esc(d.overview || 'No overview')}</div>
-  </div>`;
-}
+// Removed Compare Tool
 
 // 6. BOX OFFICE
 async function renderBoxOffice(view) { unlock('box_office');
   view.innerHTML = `<div style="margin:24px clamp(12px,2.4vw,36px) 0"><h1 class="display" style="font-size:clamp(1.9rem,3.5vw,2.6rem);margin-bottom:5px">💰 Box Office</h1><p style="color:var(--text-dim);font-size:13px">Biggest grossing films of all time.</p></div><div id="bo-r" style="margin:0 clamp(12px,2.4vw,36px) 36px"><div class="skel" style="height:200px;border-radius:14px"></div></div>`;
   try {
-    const res = await tmdb('/discover/movie', { sort_by: 'revenue.desc', 'vote_count.gte': 100 });
-    const items = (res.results || []).filter(r => r.revenue > 0).slice(0, 30);
+    const pages = await Promise.all([
+      tmdb('/movie/popular', { page: 1 }),
+      tmdb('/movie/popular', { page: 2 }),
+      tmdb('/movie/top_rated', { page: 1 }),
+    ]);
+    const allMovies = pages.flatMap(p => p.results || []);
+    const seen = new Set();
+    const unique = allMovies.filter(m => {
+      if (seen.has(m.id)) return false;
+      seen.add(m.id);
+      return m.revenue > 0;
+    });
+    unique.sort((a, b) => b.revenue - a.revenue);
+    const items = unique.slice(0, 50);
+    
     document.getElementById('bo-r').innerHTML = `<div class="cards-grid">${items.map((it, i) => `<div style="position:relative"><div style="position:absolute;top:8px;left:8px;z-index:3;background:linear-gradient(135deg,#facc15,#f97316);color:#000;font-weight:900;padding:3px 8px;border-radius:6px;font-size:11px">#${i + 1}</div>${card(it, 0)}${it.revenue ? `<div style="margin-top:6px;font-size:11px;font-weight:700;color:#facc15">$${(it.revenue / 1e9).toFixed(2)}B</div>` : ''}</div>`).join('')}</div>`;
   } catch (e) { document.getElementById('bo-r').innerHTML = `<p style="color:var(--accent)">Error: ${e.message}</p>`; }
 }
@@ -2243,9 +2375,9 @@ async function renderBoxOffice(view) { unlock('box_office');
 async function renderAwards(view) {
   view.innerHTML = `<div style="margin:24px clamp(12px,2.4vw,36px) 0"><h1 class="display" style="font-size:clamp(1.9rem,3.5vw,2.6rem);margin-bottom:5px">🏆 Awards</h1><p style="color:var(--text-dim);font-size:13px">Highest-rated films — the "Best Picture" of TMDB.</p></div><div id="aw-r" style="margin:0 clamp(12px,2.4vw,36px) 36px"><div class="skel" style="height:200px;border-radius:14px"></div></div>`;
   try {
-    const res = await tmdb('/discover/movie', { sort_by: 'vote_average.desc', 'vote_count.gte': 1000 });
-    const items = (res.results || []).filter(r => r.vote_average >= 8).slice(0, 24);
-    document.getElementById('aw-r').innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:18px;padding:0 8px">${items.map((it, i) => `<div class="poster-card" onclick="navigate('/movie/${it.id}')" style="position:relative"><div style="position:absolute;top:8px;right:8px;background:linear-gradient(135deg,#facc15,#fbbf24);color:#000;font-weight:900;padding:4px 8px;border-radius:50%;font-size:10px;z-index:4;box-shadow:0 0 12px rgba(250,204,21,.5)">🏆</div><img loading="lazy" src="${posterUrl(it.poster_path)}" alt="${esc(it.title)}" /><div class="poster-info-hover"><div class="poster-title">${esc(it.title)}</div><div class="poster-year">${(it.vote_average || 0).toFixed(1)} ★</div></div></div>`).join('')}</div>`;
+    const res = await tmdb('/movie/top_rated', { page: 1 });
+    const items = (res.results || []).slice(0, 30);
+    document.getElementById('aw-r').innerHTML = `<div class="cards-grid">${items.map((it, i) => `<div style="position:relative">${card(it, 0)}<div style="position:absolute;top:8px;right:8px;background:linear-gradient(135deg,#facc15,#fbbf24);color:#000;font-weight:900;padding:4px 8px;border-radius:50%;font-size:10px;z-index:4;box-shadow:0 0 12px rgba(250,204,21,.5)"></div></div>`).join('')}</div>`;
   } catch (e) { document.getElementById('aw-r').innerHTML = `<p style="color:var(--accent)">Error: ${e.message}</p>`; }
 }
 
@@ -2314,11 +2446,14 @@ async function renderQuiz(view) { unlock('quiz_master');
 function quizPick(el, id, title) {
   el.style.border = '2px solid var(--accent)';
   el.style.boxShadow = '0 0 24px var(--accent-glow)';
-  quizPicks.push({ id, title });
-  Array.from(el.parentElement.children).forEach(c => { if (c !== el) c.style.opacity = '0.3'; });
+  quizPicks.push({ id, title, poster_path: el.querySelector('img')?.src || '' });
+  Array.from(el.parentElement.children).forEach(c => { 
+    if (c !== el) { c.style.opacity = '0.4'; c.style.pointerEvents = 'none'; }
+  });
   if (quizPicks.length === 5) {
     setTimeout(() => {
-      document.getElementById('qz-r').innerHTML = `<div style="background:var(--surface);border:1px solid var(--accent);padding:22px;border-radius:16px"><h3 style="font-family:var(--font-display);font-size:1.1rem;margin-bottom:14px">🎉 Your Picks:</h3><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:11px">${quizPicks.map(p => `<div class="poster-card" onclick="navigate('/movie/${p.id}')"><div style="aspect-ratio:2/3;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;font-size:32px">🎬</div><div class="poster-info-hover"><div class="poster-title">${esc(p.title)}</div></div></div>`).join('')}</div><div style="margin-top:16px;display:flex;gap:9px"><button class="btn btn-primary" onclick="quizPicks=[];navigate('/quiz')">Play Again</button><button class="btn btn-secondary" onclick="addPicksToWL()">Add All to Watchlist</button></div></div>`;
+      const resultHtml = quizPicks.map(p => card({id: p.id, media_type: 'movie', title: p.title, poster_path: p.poster_path || '', vote_average: 0}, 0)).join('');
+      document.getElementById('qz-r').innerHTML = `<div style="background:var(--surface);border:1px solid var(--accent);padding:22px;border-radius:16px"><h3 style="font-family:var(--font-display);font-size:1.1rem;margin-bottom:14px"> Your Picks:</h3><div class="cards-grid">${resultHtml}</div><div style="margin-top:16px;display:flex;gap:9px;flex-wrap:wrap"><button class="btn btn-primary" onclick="quizPicks=[];navigate('/quiz')">Play Again</button><button class="btn btn-secondary" onclick="addPicksToWL()">Add All to Watchlist</button></div></div>`;
       confetti();
     }, 400);
   }
@@ -3172,6 +3307,7 @@ async function renderDetail(view, mt, id) {
         <div class="player-wrap">
           <iframe id="player-iframe" src="" allow="autoplay;fullscreen;encrypted-media;picture-in-picture" allowfullscreen="true" style="width:100%;height:100%;border:none;display:block"></iframe>
           <button class="fs-exit-btn" onclick="exitPlayerFullscreen()">✕ Exit Fullscreen</button>
+          <button class="fx-toggle-btn" onclick="document.querySelector('.fx-hud').classList.toggle('open')">🎛️</button>
           <div class="fx-hud">
             <div class="fx-title">🎛️ Video FX</div>
             <div class="fx-row"><span>Brightness</span><span class="fx-val" id="v-b">100%</span></div>
@@ -3973,7 +4109,7 @@ function clearAllHistory() {
 // ============================================================
 // To add Fouad's photo: upload the image to any image host (imgur, postimages, etc.)
 // and replace the PHOTO_URL below with the direct image link.
-const FOUAD_PHOTO_URL = 'https://messages-prod.27c852f3500f38c1e7786e2c9ff9e48f.r2.cloudflarestorage.com/019dad5d-9856-74c2-bdd3-204f0d795c8c/1781029606935-image.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=b33de61d4f22a31b59b25364ab5037c5%2F20260609%2Fauto%2Fs3%2Faws4_request&X-Amz-Date=20260609T183222Z&X-Amz-Expires=3600&X-Amz-Signature=a1e165996ffaad115f9195e3a329084f2f7ac87ad081e42b655ad31cf5275e73&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject';
+const FOUAD_PHOTO_URL = 'https://i.ibb.co/n8fgPGpc/image.png';
 
 const FRIENDS_DATA = [
   {
