@@ -1383,12 +1383,8 @@ async function render() {
   // Clean up discover infinite scroll observer
   if (typeof _discoverObserver !== 'undefined' && _discoverObserver) { _discoverObserver.disconnect(); _discoverObserver = null; }
 
-  // Stop background playback — clear iframe source before replacing DOM
-  stopAllPlayback();
-  // Close mini player on navigation
-  closeMini();
-  // Reset player state
-  curSrv = 'vidlink'; curMir = 0; curS = 1; curE = 1;
+  // Auto-transfer playing video into Mini Player (so it keeps playing across navigation)
+  transferToMiniIfPlaying();
 
   view.innerHTML = '<div class="skel" style="height:60vh;margin:16px clamp(12px,2.4vw,36px);border-radius:20px"></div>';
   try {
@@ -1485,8 +1481,41 @@ function closeMini() {
 }
 function expandMini() {
   if (!miniItem) return;
+  // Mark that we should NOT re-transfer when arriving at the detail page
+  window._comingFromMini = true;
   navigate(`/${miniItem.media_type}/${miniItem.id}`);
   closeMini();
+}
+
+// Transfer the active main player into the persistent Mini Player BEFORE leaving the page.
+// This way the movie keeps playing while the user browses other pages.
+function transferToMiniIfPlaying() {
+  const playerIframe = document.getElementById('player-iframe');
+  // If we just came from mini, don't re-trigger
+  if (window._comingFromMini) { window._comingFromMini = false; return; }
+  if (!playerIframe || !playerIframe.src || playerIframe.src === 'about:blank' || playerIframe.src === window.location.href) return;
+  // Get current item info
+  const titleEl = document.querySelector('.detail-title');
+  const { parts } = parseRoute();
+  if (parts[0] !== 'movie' && parts[0] !== 'tv') return;
+  const item = {
+    id: parseInt(parts[1]),
+    media_type: parts[0],
+    title: titleEl ? (titleEl.textContent || '').replace(/\(\d{4}\)/, '').trim() : 'Now Playing',
+    poster_path: '',
+    vote_average: 0,
+  };
+  const currentSrc = playerIframe.src;
+  // Move the playback to mini player
+  miniItem = item;
+  const miniFrame = document.getElementById('mini-iframe');
+  if (miniFrame) {
+    miniFrame.src = currentSrc;
+    document.getElementById('mini-info').textContent = item.title;
+    document.getElementById('mini').classList.add('visible');
+  }
+  // Clear main player without disturbing mini
+  playerIframe.src = 'about:blank';
 }
 
 /* === SLEEP TIMER === */
@@ -3308,6 +3337,12 @@ function scheduleReminder(ev, isEdit) {
 })();
 
 async function renderDetail(view, mt, id) {
+  // If the mini player has the same title, close it so we can resume in main player
+  if (miniItem && miniItem.id == id && miniItem.media_type === mt) {
+    closeMini();
+  }
+  // Reset player state for new title
+  curSrv = 'vidlink'; curMir = 0; curS = 1; curE = 1;
   view.innerHTML = `<div class="skel" style="height:68vh;margin:16px clamp(12px,2.4vw,36px);border-radius:24px"></div>`;
   const region = LS.get('providerRegion', 'US');
   const [det, cred, sim, vids, revs, kws, recs, ext, prov] = await Promise.all([
@@ -4192,23 +4227,19 @@ function renderHistory(view) {
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px">
         ${history.map((entry, i) => {
           const date = new Date(entry.ts);
-          const progress = entry.progress || 75;
           const isTv = entry.media_type === 'tv';
+          const histKey = `${entry.media_type}_${entry.id}_${entry.ts}`;
           return `
-            <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;position:relative;cursor:pointer;transition:border-color .2s" onclick="navigate('/${entry.media_type}/${entry.id}')" oncontextmenu="event.preventDefault();showHistoryCtx(event, ${JSON.stringify(entry).replace(/"/g,'&quot;')})">
-              <div style="display:flex;gap:12px;align-items:flex-start">
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;position:relative;transition:border-color .2s">
+              <div style="display:flex;gap:12px;align-items:flex-start;cursor:pointer" onclick="navigate('/${entry.media_type}/${entry.id}')">
                 <img loading="lazy" src="${posterUrl(entry.poster_path)}" style="width:68px;height:96px;object-fit:cover;border-radius:8px;flex-shrink:0" onerror="this.style.display='none'">
                 <div style="flex:1;min-width:0">
-                  <div style="font-weight:700;font-size:13px;line-height:1.3;margin-bottom:4px">${esc(entry.title)}</div>
-                  <div style="font-size:10.5px;color:var(--text-dim);margin-bottom:8px">${isTv ? '📺 TV' : '🎬 Movie'} · ${date.toLocaleDateString()}</div>
-                  <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-dim);margin-bottom:6px">
-                    <div style="flex:1;height:4px;background:var(--surface-2);border-radius:2px;position:relative;overflow:hidden"><div style="position:absolute;top:0;left:0;height:100%;background:var(--accent);width:${progress}%"></div></div>
-                    <span>${progress}%</span>
-                  </div>
-                  <div style="font-size:10px;color:var(--text-muted)">Last watched ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+                  <div style="font-weight:700;font-size:13px;line-height:1.3;margin-bottom:4px;padding-right:60px">${esc(entry.title)}</div>
+                  <div style="font-size:10.5px;color:var(--text-dim);margin-bottom:8px">${isTv ? '📺 TV' : '🎬 Movie'} · ${entry.vote_average ? entry.vote_average.toFixed(1) + ' ★' : ''}</div>
+                  <div style="font-size:10px;color:var(--text-muted)">Watched ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
                 </div>
               </div>
-              <div style="position:absolute;top:8px;right:8px;font-size:10px;background:rgba(0,0,0,0.6);color:var(--accent);padding:2px 6px;border-radius:4px">${entry.vote_average ? entry.vote_average.toFixed(1) : '—'} ★</div>
+              <button onclick="event.stopPropagation();deleteHistoryByTs(${entry.ts})" title="Delete" style="position:absolute;top:8px;right:8px;background:rgba(255,0,0,0.12);border:1px solid rgba(255,80,80,0.3);color:#ff6b6b;width:30px;height:30px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s" onmouseover="this.style.background='#ff4040';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,0,0,0.12)';this.style.color='#ff6b6b'">✕</button>
             </div>`;
         }).join('')}
       </div>
@@ -4236,6 +4267,12 @@ function deleteHistoryEntry(id) {
   const h = getHistory().filter(x => x.id !== id);
   LS.set('history', h);
   toast('History entry deleted', '🗑️');
+  renderHistory(document.getElementById('view'));
+}
+function deleteHistoryByTs(ts) {
+  const h = getHistory().filter(x => x.ts !== ts);
+  LS.set('history', h);
+  toast('Removed from history', '🗑️');
   renderHistory(document.getElementById('view'));
 }
 
@@ -4418,12 +4455,9 @@ setTimeout(() => { const s = document.getElementById('splash'); if (s) s.remove(
 render();
 
 // Stop all playback on page unload / tab switch
+// Only stop playback when actually closing/reloading the page, NOT on tab switches.
+// We let the mini player keep playing while user browses other tabs/pages.
 window.addEventListener('beforeunload', () => { try { stopAllPlayback(); } catch {} });
-document.addEventListener('visibilitychange', () => {
-  if (document.hidden) {
-    try { stopAllPlayback(); } catch {}
-  }
-});
 
 if (!window.requestIdleCallback) window.requestIdleCallback = (cb, o) => setTimeout(() => cb({ didTimeout: false, timeRemaining: () => 50 }), o?.timeout || 1);
 </script>
